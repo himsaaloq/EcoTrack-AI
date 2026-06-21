@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EcoTrack AI — Track. Reduce. Sustain.</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ───── HEADER ───── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">🌿</div>
+        <span class="logo-text">EcoTrack AI</span>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-btn active" data-tab="dashboard"><span>🏠</span><span class="nav-label">Dashboard</span></button>
+        <button class="nav-btn" data-tab="calculator"><span>🔢</span><span class="nav-label">Calculator</span></button>
+        <button class="nav-btn" data-tab="challenges"><span>🎯</span><span class="nav-label">Challenges</span></button>
+        <button class="nav-btn" data-tab="analytics"><span>📊</span><span class="nav-label">Analytics</span></button>
+      </nav>
+
+      <div class="points-badge">⚡ <span id="pointsDisplay">0</span> pts</div>
+      <button class="icon-btn" id="darkToggle">🌙</button>
+      <button class="ai-btn" id="aiHeaderBtn">🤖 AI Help</button>
+    </div>
+
+    <!-- Mobile tab bar -->
+    <div class="mobile-tabs" id="mobileTabs">
+      <button class="mtab active" data-tab="dashboard"><span>🏠</span><span>Dashboard</span></button>
+      <button class="mtab" data-tab="calculator"><span>🔢</span><span>Calculator</span></button>
+      <button class="mtab" data-tab="challenges"><span>🎯</span><span>Challenges</span></button>
+      <button class="mtab" data-tab="analytics"><span>📊</span><span>Analytics</span></button>
+    </div>
+  </header>
+
+  <!-- ───── MAIN ───── -->
+  <main class="main">
+    <div class="page-header">
+      <h1 id="pageTitle">🏠 Dashboard</h1>
+      <p id="pageSubtitle">Your sustainability overview at a glance</p>
+    </div>
+
+    <!-- ═══════════ DASHBOARD TAB ═══════════ -->
+    <section class="tab-content active" id="tab-dashboard">
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">🌍</div>
+          <div class="stat-value" id="statFootprint">—</div>
+          <div class="stat-label">Today's Footprint</div>
+          <div class="stat-sub">CO₂ equivalent</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">⚡</div>
+          <div class="stat-value" id="statPoints">0</div>
+          <div class="stat-label">Eco Points</div>
+          <div class="stat-sub" id="statLevel">Beginner</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🏅</div>
+          <div class="stat-value" id="statBadges">0</div>
+          <div class="stat-label">Badges Earned</div>
+          <div class="stat-sub">of 6</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">🎯</div>
+          <div class="stat-value" id="statChallenges">0</div>
+          <div class="stat-label">Challenges Done</div>
+          <div class="stat-sub">this week</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title" id="levelTitle">🌱 Beginner — Level Progress</div>
+        <div class="progress-row">
+          <div class="progress-track"><div class="progress-fill" id="levelProgress" style="width:0%"></div></div>
+          <span class="progress-text" id="levelText">0 / 200 pts</span>
+        </div>
+        <div class="muted" id="levelSubtext">200 points to next level</div>
+      </div>
+
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">📈 Weekly CO₂ Trend</div>
+          <canvas id="trendChart" height="180"></canvas>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🏅 Your Badges</div>
+          <div class="badges-grid" id="badgesGrid"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💡 Eco Tip of the Day</div>
+          <p class="tip-text" id="tipText">Loading tip...</p>
+          <div class="tag-row">
+            <span class="tag">Energy</span><span class="tag">Transport</span><span class="tag">Food</span><span class="tag">Water</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ CALCULATOR TAB ═══════════ -->
+    <section class="tab-content" id="tab-calculator">
+      <div class="grid-3">
+
+        <div class="card">
+          <div class="card-title">🚗 Transportation</div>
+          <div class="label">Mode</div>
+          <div class="segment" id="seg-transport">
+            <button data-value="bike">🚲 Bike</button>
+            <button data-value="car" class="active">🚗 Car</button>
+            <button data-value="bus">🚌 Bus</button>
+            <button data-value="train">🚆 Train</button>
+            <button data-value="ev">⚡ EV</button>
+          </div>
+          <div class="label mt">Daily Distance (km)</div>
+          <input type="range" id="distanceSlider" min="0" max="100" value="20" />
+          <div class="slider-value" id="distanceValue">20 km</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🥗 Food Habits</div>
+          <div class="label">Diet Type</div>
+          <div class="segment" id="seg-food">
+            <button data-value="vegan">🌱 Vegan</button>
+            <button data-value="vegetarian">🥦 Vegetarian</button>
+            <button data-value="nonveg" class="active">🍗 Non-veg</button>
+          </div>
+          <div class="info-box" id="foodInfo">🔴 Highest impact — consider plant-based days</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">⚡ Electricity</div>
+          <div class="label">Daily Usage (kWh)</div>
+          <input type="range" id="electricitySlider" min="0" max="30" value="5" />
+          <div class="slider-value" id="electricityValue">5 kWh</div>
+          <div class="muted">Avg Indian household: ~4 kWh/day</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">💧 Water Usage</div>
+          <div class="label">Daily Consumption (Liters)</div>
+          <input type="range" id="waterSlider" min="0" max="500" value="150" />
+          <div class="slider-value" id="waterValue">150 L</div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🛍️ Shopping Habits</div>
+          <div class="label">Monthly Shopping Frequency</div>
+          <div class="segment" id="seg-shopping">
+            <button data-value="low">💚 Minimal</button>
+            <button data-value="medium" class="active">🟡 Moderate</button>
+            <button data-value="high">🔴 Frequent</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🗑️ Waste Generation</div>
+          <div class="label">Daily Waste Amount</div>
+          <div class="segment" id="seg-waste">
+            <button data-value="low">💚 Low</button>
+            <button data-value="medium" class="active">🟡 Medium</button>
+            <button data-value="high">🔴 High</button>
+          </div>
+        </div>
+      </div>
+
+      <button class="calc-btn" id="calcBtn">Calculate My Carbon Footprint →</button>
+
+      <div class="grid-3" id="resultsSection" style="display:none">
+        <div class="card">
+          <div class="card-title">📊 Your Results</div>
+          <div class="results-row">
+            <div class="result-box">
+              <div class="result-value" id="resDaily">0</div>
+              <div class="result-unit">kg CO₂</div>
+              <div class="result-label">Daily</div>
+            </div>
+            <div class="result-box">
+              <div class="result-value" id="resWeekly">0</div>
+              <div class="result-unit">kg CO₂</div>
+              <div class="result-label">Weekly</div>
+            </div>
+            <div class="result-box">
+              <div class="result-value" id="resMonthly">0</div>
+              <div class="result-unit">kg CO₂</div>
+              <div class="result-label">Monthly</div>
+            </div>
+          </div>
+          <div class="info-box" id="resultMessage"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">🍩 Emissions Breakdown</div>
+          <canvas id="pieChart" height="200"></canvas>
+        </div>
+
+        <div class="card">
+          <div class="card-title">📉 Category Comparison</div>
+          <canvas id="barChart" height="200"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ CHALLENGES TAB ═══════════ -->
+    <section class="tab-content" id="tab-challenges">
+      <div class="challenges-grid" id="challengesGrid"></div>
+
+      <div class="card">
+        <div class="card-title">🏆 Community Leaderboard</div>
+        <div id="leaderboardList"></div>
+      </div>
+    </section>
+
+    <!-- ═══════════ ANALYTICS TAB ═══════════ -->
+    <section class="tab-content" id="tab-analytics">
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">📅 Monthly Emissions Trend</div>
+          <canvas id="monthlyChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">💰 CO₂ Savings by Action (kg/month)</div>
+          <canvas id="savingsChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">🎯 Goal Completion by Category</div>
+          <canvas id="goalChart" height="200"></canvas>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🌏 How You Compare</div>
+        <div class="compare-grid">
+          <div class="compare-box">
+            <div class="compare-value" id="compareYou" style="color:#22c55e">—</div>
+            <div class="compare-unit">kg CO₂</div>
+            <div class="compare-label">Your Monthly</div>
+          </div>
+          <div class="compare-box">
+            <div class="compare-value" style="color:#eab308">190</div>
+            <div class="compare-unit">kg CO₂/mo</div>
+            <div class="compare-label">India Average</div>
+          </div>
+          <div class="compare-box">
+            <div class="compare-value" style="color:#f97316">370</div>
+            <div class="compare-unit">kg CO₂/mo</div>
+            <div class="compare-label">Global Average</div>
+          </div>
+          <div class="compare-box">
+            <div class="compare-value" style="color:#3b82f6">125</div>
+            <div class="compare-unit">kg CO₂/mo</div>
+            <div class="compare-label">Paris Target</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ───── FAB AI BUTTON ───── -->
+  <button class="fab" id="aiFab">🤖</button>
+
+  <!-- ───── AI CHAT MODAL ───── -->
+  <div class="chat-overlay" id="chatOverlay">
+    <div class="chat-window">
+      <div class="chat-header">
+        <div class="chat-avatar">🌿</div>
+        <div>
+          <div class="chat-title">EcoTrack AI Assistant</div>
+          <div class="chat-status">● Online — ask me anything</div>
+        </div>
+        <button class="chat-close" id="chatClose">✕</button>
+      </div>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div class="chat-input-row">
+        <input type="text" id="chatInput" placeholder="Ask about sustainability..." />
+        <button id="chatSend">→</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ───── TOAST ───── -->
+  <div class="toast" id="toast"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="script.js"></script>
+
+</body>
+</html>
