@@ -1,0 +1,41 @@
+ECOTRACK AI — FIXED CHAT SETUP
+
+FILES
+- script.js: replace your existing frontend script.js with this file.
+- ecotrack-backend/: secure Node.js + Express API.
+- .gitignore: prevents .env and node_modules from being committed.
+
+IMPORTANT SECURITY
+1. Revoke the old Groq API key that was previously placed in browser JavaScript.
+2. Create a NEW Groq key. Never paste it into script.js, index.html, GitHub, or chat.
+3. Copy ecotrack-backend/.env.example to ecotrack-backend/.env.
+4. Put the new key only in GROQ_API_KEY inside backend/.env.
+
+LOCAL RUN
+1. Install Node.js 18 or newer.
+2. Open terminal in ecotrack-backend folder.
+3. Run: npm install
+4. Create .env as described above.
+5. Run: npm run dev
+6. Confirm http://localhost:3000/api/health shows status ok.
+7. Open the frontend using VS Code Live Server (usually http://127.0.0.1:5500).
+8. If your Live Server uses a different origin, add it to FRONTEND_ORIGIN in backend/.env, comma-separated. Restart backend after changing .env.
+
+FRONTEND API URL
+The provided script.js is set to http://localhost:3000 for local testing.
+After deploying the backend (for example on Render), change ECOTRACK_API_BASE_URL near the AI CHAT section in script.js to your actual backend base URL, e.g. https://your-service.onrender.com (no trailing slash).
+Also set FRONTEND_ORIGIN on the backend host to your exact GitHub Pages origin, e.g. https://your-github-name.github.io.
+Set GROQ_API_KEY as a secret environment variable in the backend host dashboard. Do not upload .env.
+
+GITHUB SAFETY CHECK
+Before committing, run: git grep -n "gsk_"
+There should be no real key in tracked files. Also run: git status --ignored
+Make sure backend/.env is ignored. If an old key was ever committed, revoke it; deleting it from the latest file does not remove it from Git history.
+
+NOTES
+- The existing dashboard/calculator/challenges/analytics code is retained.
+- Chat no longer calls Groq directly from the browser.
+- Duplicate user prompt is fixed; recent chat history is capped.
+- The user's current calculator estimate is sent as context when available.
+- API failures are shown clearly instead of silently returning repetitive canned answers.
+- Emission values remain estimates based on the existing app factors.

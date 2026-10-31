@@ -554,34 +554,56 @@ function baseChartOptions(gridColor, textColor, showLegend = true) {
 
 // ───── AI CHAT ─────
 
+// Keep the backend URL here after deploying the backend.
+// Local development: http://localhost:3000
+// Production example: https://your-ecotrack-api.onrender.com
+const ECOTRACK_API_BASE_URL = "http://localhost:3000";
+
 let chatMessages = [
-  { role: "assistant", text: "Hi! I'm your EcoTrack AI assistant 🌿 Ask me anything about carbon footprints, sustainability tips, or how to reduce your impact!" },
+  {
+    role: "assistant",
+    text: "Hi! I'm your EcoTrack AI assistant 🌿 Ask me about your carbon footprint, sustainability tips, or ways to reduce your impact!"
+  }
 ];
+
+let chatRequestPending = false;
 
 function setupChat() {
   const overlay = document.getElementById("chatOverlay");
   const openChat = () => {
     overlay.classList.add("open");
     renderChatMessages();
+    document.getElementById("chatInput").focus();
   };
+
   document.getElementById("aiFab").addEventListener("click", openChat);
   document.getElementById("aiHeaderBtn").addEventListener("click", openChat);
   document.getElementById("chatClose").addEventListener("click", () => overlay.classList.remove("open"));
-  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.classList.remove("open"); });
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) overlay.classList.remove("open");
+  });
 
   document.getElementById("chatSend").addEventListener("click", sendChatMessage);
   document.getElementById("chatInput").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") sendChatMessage();
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendChatMessage();
+    }
   });
 }
 
 function renderChatMessages() {
   const container = document.getElementById("chatMessages");
+  if (!container) return;
   container.innerHTML = "";
-  chatMessages.forEach(m => {
+
+  chatMessages.forEach((message) => {
     const row = document.createElement("div");
-    row.className = `chat-msg-row ${m.role}`;
-    row.innerHTML = `<div class="chat-bubble ${m.role}">${escapeHtml(m.text)}</div>`;
+    row.className = `chat-msg-row ${message.role}`;
+    const bubble = document.createElement("div");
+    bubble.className = `chat-bubble ${message.role}`;
+    bubble.textContent = message.text;
+    row.appendChild(bubble);
     container.appendChild(row);
   });
   container.scrollTop = container.scrollHeight;
@@ -589,67 +611,90 @@ function renderChatMessages() {
 
 function showTyping(show) {
   const container = document.getElementById("chatMessages");
+  if (!container) return;
   let typing = document.getElementById("typingIndicator");
-  if (show) {
-    if (!typing) {
-      typing = document.createElement("div");
-      typing.id = "typingIndicator";
-      typing.className = "chat-typing";
-      typing.innerHTML = "<span></span><span></span><span></span>";
-      container.appendChild(typing);
-      container.scrollTop = container.scrollHeight;
-    }
-  } else if (typing) {
+
+  if (show && !typing) {
+    typing = document.createElement("div");
+    typing.id = "typingIndicator";
+    typing.className = "chat-typing";
+    typing.innerHTML = "<span></span><span></span><span></span>";
+    container.appendChild(typing);
+    container.scrollTop = container.scrollHeight;
+  } else if (!show && typing) {
     typing.remove();
   }
 }
 
-function sendChatMessage() {
+async function sendChatMessage() {
   const input = document.getElementById("chatInput");
-  const q = input.value.trim();
-  if (!q) return;
-  input.value = "";
+  const sendButton = document.getElementById("chatSend");
+  const question = input.value.trim();
 
-  chatMessages.push({ role: "user", text: q });
+  if (!question || chatRequestPending) return;
+  if (question.length > 2000) {
+    chatMessages.push({ role: "assistant", text: "Please keep your message under 2,000 characters so I can process it properly. 🌿" });
+    renderChatMessages();
+    return;
+  }
+
+  input.value = "";
+  chatMessages.push({ role: "user", text: question });
   renderChatMessages();
   showTyping(true);
+  chatRequestPending = true;
+  if (sendButton) sendButton.disabled = true;
 
-  // NOTE: This uses a local rule-based responder since calling the Anthropic
-  // API directly from a static HTML page would expose your API key publicly.
-  // To use real AI responses, set up a backend (see README.md) and replace
-  // this function with a fetch() call to your own /api/chat endpoint.
-  setTimeout(() => {
-    showTyping(false);
-    const reply = localEcoReply(q);
+  try {
+    // Send a bounded conversation history. The current question is already included once.
+    const history = chatMessages
+      .slice(-13)
+      .map(({ role, text }) => ({ role, content: text }));
+
+    const response = await fetch(`${ECOTRACK_API_BASE_URL}/api/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        messages: history,
+        context: {
+          footprintResult: state.footprintResult || null,
+          calculatorInputs: state.calcForm || null
+        }
+      })
+    });
+
+    let data = {};
+    try {
+      data = await response.json();
+    } catch {
+      throw new Error("The server returned an invalid response. Please try again.");
+    }
+
+    if (!response.ok) {
+      throw new Error(data.error || `AI service error (${response.status}). Please try again later.`);
+    }
+
+    const reply = typeof data.reply === "string" ? data.reply.trim() : "";
+    if (!reply) throw new Error("AI returned an empty response. Please try again.");
+
     chatMessages.push({ role: "assistant", text: reply });
+  } catch (error) {
+    console.error("EcoTrack AI request failed:", error);
+    let message = error.message || "Unknown error";
+    if (error instanceof TypeError) {
+      message = "I couldn't connect to the EcoTrack AI server. Make sure the backend is running and the API URL is correct.";
+    }
+    chatMessages.push({
+      role: "assistant",
+      text: `⚠️ ${message}\n\nYour message is still here. Please check the backend connection and try again. 🌿`
+    });
+  } finally {
+    showTyping(false);
+    chatRequestPending = false;
+    if (sendButton) sendButton.disabled = false;
     renderChatMessages();
-  }, 700 + Math.random() * 500);
-}
-
-function localEcoReply(q) {
-  const text = q.toLowerCase();
-  if (text.includes("bike") || text.includes("cycle")) {
-    return "Great choice! 🚲 Cycling instead of driving a car for the same distance can save roughly 0.21 kg CO₂ per km. Over 20 km daily, that's about 4.2 kg CO₂ saved every day — over 125 kg per month!";
+    input.focus();
   }
-  if (text.includes("car") || text.includes("vehicle")) {
-    return "Cars are one of the biggest contributors to personal carbon footprint — about 0.21 kg CO₂ per km. Try carpooling, public transport, or an EV to cut this by 60-90%. 🚗➡️🚌";
-  }
-  if (text.includes("food") || text.includes("diet") || text.includes("meat") || text.includes("vegan") || text.includes("vegetarian")) {
-    return "Food choices matter a lot! 🥗 A non-vegetarian diet produces ~5.5 kg CO₂/day, vegetarian ~2.5 kg, and vegan ~1.5 kg. Swapping a few meals a week to plant-based can meaningfully cut your footprint.";
-  }
-  if (text.includes("electricity") || text.includes("power") || text.includes("energy")) {
-    return "Electricity use contributes ~0.82 kg CO₂ per kWh on the Indian grid. Switching to LEDs, unplugging idle devices, and using natural light can cut daily electricity emissions by 20-30%. ⚡";
-  }
-  if (text.includes("water")) {
-    return "Water has a smaller direct CO₂ footprint, but treatment & heating add up. Fixing leaks and shorter showers can save thousands of liters a year. 💧";
-  }
-  if (text.includes("what is") && text.includes("carbon footprint")) {
-    return "Your carbon footprint is the total greenhouse gases (mainly CO₂) produced by your daily activities — travel, food, electricity, shopping, and waste. Tracking it helps you see exactly where to cut back. 🌍";
-  }
-  if (text.includes("hi") || text.includes("hello") || text.includes("hey")) {
-    return "Hey there! 🌿 Ask me about transport, food, electricity, or water habits and I'll tell you how to lower your carbon footprint!";
-  }
-  return "Good question! 🌿 Try asking about bike commuting, food choices, electricity, or water usage — I have specific CO₂-saving tips for those!";
 }
 
 function escapeHtml(str) {
