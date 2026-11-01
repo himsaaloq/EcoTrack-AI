@@ -554,11 +554,12 @@ function baseChartOptions(gridColor, textColor, showLegend = true) {
 
 // ───── AI CHAT ─────
 
-// Keep the backend URL here after deploying the backend.
-// Local development: http://localhost:3000
-// Production example: https://your-ecotrack-api.onrender.com
-const ECOTRACK_API_BASE_URL = "http://localhost:3000";
-
+// Local development and Vercel production API connection
+const ECOTRACK_API_BASE_URL =
+  (window.location.hostname === "localhost" ||
+   window.location.hostname === "127.0.0.1")
+    ? "http://localhost:3000"
+    : "";
 let chatMessages = [
   {
     role: "assistant",
