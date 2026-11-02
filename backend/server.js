@@ -10,6 +10,16 @@ const rateLimit = require("express-rate-limit");
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+const path = require("path");
+
+const PUBLIC_DIR = path.join(__dirname, "..", "public");
+
+app.use(express.static(PUBLIC_DIR));
+
+app.get("/", (_req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "index.html"));
+});
+
 const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 const GROQ_MODEL = process.env.GROQ_MODEL || "openai/gpt-oss-20b";
 
